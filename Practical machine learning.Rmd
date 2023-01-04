@@ -5,6 +5,28 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
+## background information
+
+
+Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset).
+
+
+Data
+
+The training data for this project are available here:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+The test data are available here:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+
+The data for this project come from this source: http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har. If you use the document you create for this class for any purpose please cite them as they have been very generous in allowing their data to be used for this kind of assignment.
+
+## Page setup
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
@@ -53,13 +75,13 @@ if(!require("data.table")){
 ## R Markdown
 ```{r}
  
-if (!(file.exists("./training.csv"))){
+if (!(file.exists("./training_data.csv"))){
   download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", destfile = paste(path, "training_data.csv", sep = "/"),method = "curl")}
-if (!(file.exists("./testing.csv"))){
+if (!(file.exists("./testing_data.csv"))){
  download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", destfile = paste(path, "test_data.csv", sep = "/"),method = "curl")}
  
- training_data <-read.csv("./training.csv")
- test_data <-read.csv("./training.csv")
+ training_data <-read.csv("./training_data.csv")
+ test_data <-read.csv("./test_data.csv")
 ```
 
 # splitting training set
@@ -120,6 +142,10 @@ confusion_matrix_rf <- confusionMatrix(prediction_validation_gbm,as.factor(actua
 print(confusion_matrix_rf)
 
 ```
+
+### predicting the test cases
+
+
 You can also embed plots, for example:
 
 ```{r pressure, echo=FALSE}
