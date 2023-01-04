@@ -1,0 +1,131 @@
+---
+title: "Practical Machine learning"
+author: "Michael"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+path <- "./"
+```
+## import relevant R library
+the following R library shall be imported for processing and analysis of data and setting working directory
+
+```{r}
+setwd("./")
+path<-"./"
+if(!require("tidyverse")){
+  install.packages("tidyverse")
+  library(tidyverse)
+}
+if(!require("tidyr")){
+  install.packages("tidyr")
+  library(tidyr)
+}
+
+if(!require("dplyr")){
+  install.packages("dplyr")
+  library(dplyr)
+}
+
+if(!require("ggplot2")){
+  install.packages("ggplot2")
+  library(ggplot2)
+}
+if(!require("caret")){
+install.packages("caret")
+ library("caret")}
+if(!require("data.table")){
+  install.packages("data.table")
+  library("data.table")
+}
+# install.packages("rattle")
+# install.packages("forcast")
+# install.packages("pgmm")
+# install.packages("rpart")
+# install.packages("gbm")
+# install.packages("lubridate")
+# install.packages("e1071")
+# install.packages("elasticnet")
+```
+## R Markdown
+```{r}
+ 
+if (!(file.exists("./training.csv"))){
+  download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv", destfile = paste(path, "training_data.csv", sep = "/"),method = "curl")}
+if (!(file.exists("./testing.csv"))){
+ download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv", destfile = paste(path, "test_data.csv", sep = "/"),method = "curl")}
+ 
+ training_data <-read.csv("./training.csv")
+ test_data <-read.csv("./training.csv")
+```
+
+# splitting training set
+```{r}
+# Now split the training into to as actual testing and validation
+set.seed(1234) # Don't forget the reproducibility!
+trainingDS <- createDataPartition( y = training_data$classe,
+                                   p = 0.7,
+                                   list = FALSE)
+actual_training <- training_data[trainingDS,]
+actual_validation <- training_data[-trainingDS,]
+
+```
+#Cleaning the data
+we need to prepare the data for modeling. looking at the training data  there are a number of variables that have either no variance or a large fraction of missing values. we shall clean them up for a healthy modeling:
+```{r}
+### Now clean-up the variables w/ zero variance
+### Be careful, kick out the same variables in both cases
+nzv <- nearZeroVar(actual_training)
+actual_training <- actual_training[,-nzv]
+actual_validation <- actual_validation[,-nzv]
+
+```
+# Remove variables that are mostly NA
+```{r}
+mostlyNA <- sapply(actual_training,function(x) mean(is.na(x))) > 0.95
+actual_training <- actual_training[,mostlyNA==FALSE]
+actual_validation <- actual_validation[,mostlyNA==FALSE]
+
+#dropping the first 5 variable as dy are not relevant predictors
+actual_training <- actual_training[,-(1:5)]
+actual_validation <- actual_validation[,-(1:5)]
+```
+
+## building radom forest model(rf) and a Generalized Boosted model(gbm)
+```{r}
+#random forest model
+set.seed(111)
+modelRF  <- train( classe ~.,
+                   data = actual_training,
+                   method = "rf",
+                   trControl = trainControl(method="cv",number=3) )
+
+set.seed(111)
+modelBM <- train( classe ~.,
+                  data = actual_training,
+                  method = "gbm",
+                  trControl = trainControl(method="repeatedcv",number = 5,repeats = 1),
+                  verbose = FALSE)
+
+# confusion matrix computation for rf model
+prediction_validation_rf <- predict(modelRF,actual_validation)
+confusion_matrix_rf <- confusionMatrix(prediction_validation_rf,as.factor(actual_validation$classe))
+print(confusion_matrix_rf)
+# confusion matrix computation for gbm model
+prediction_validation_gbm <- predict(modelBM,actual_validation)
+confusion_matrix_rf <- confusionMatrix(prediction_validation_gbm,as.factor(actual_validation$classe))
+print(confusion_matrix_rf)
+
+```
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+# Now get the prediction in the testing portion and see what we get
+prediction_testing_rf <- predict(modelRF,test_data)
+print(prediction_testing_rf)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
